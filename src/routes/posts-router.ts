@@ -4,11 +4,21 @@ import { PostRepository } from '../repositories/post-repository';
 import { postValidation } from '../validators/post-validators';
 import { ObjectId } from 'mongodb';
 import { InputPostType } from '../models/post/input/inputPostModel';
+import { PostQueryRepository } from '../repositories/post.query.repository';
+import { RequestWithQuery } from '../models/common';
+import { QueryPostInputModel } from '../models/post/input/query.post.input.model';
 
 export const postRoute: Router = Router({});
 
-postRoute.get('/', async (req, res) => {
-   const posts = await PostRepository.getAllPosts();
+postRoute.get('/', async (req: RequestWithQuery<QueryPostInputModel>, res) => {
+   const sortData = {
+      // Не знаю могут ли они придти невалидные и надо ли это обработать
+      sortBy: req.query.sortBy ?? 'createdAt',
+      sortDirection: req.query.sortDirection ?? 'desc',
+      pageNumber: req.query.pageNumber ? +req.query.pageNumber : 1,
+      pageSize: req.query.pageSize ? +req.query.pageSize : 10,
+   };
+   const posts = await PostQueryRepository.getAllPosts(sortData);
    res.status(200).send(posts);
 });
 
@@ -17,7 +27,7 @@ postRoute.get('/:id', async (req, res) => {
       res.sendStatus(404);
       return;
    }
-   const post = await PostRepository.getPostById(req.params.id);
+   const post = await PostQueryRepository.getPostById(req.params.id);
 
    if (!post) {
       res.sendStatus(404);

@@ -10,6 +10,7 @@ console.log(mongoURI);
 
 const client = new MongoClient(mongoURI);
 
+// Указываем к какой базе коннектимся
 const dataBase = client.db('blog-db');
 
 export const blogsCollection = dataBase.collection<BlogDB>('blogs');

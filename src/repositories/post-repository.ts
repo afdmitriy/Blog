@@ -5,27 +5,24 @@ import { OutputPostType } from '../models/post/output/outputPostModel';
 import { PostDB } from '../models/post/db/post-db';
 import { InputPostType } from '../models/post/input/inputPostModel';
 import { BlogRepository } from './blog-repository';
+import { BlogQueryRepository } from './blog.query.repository';
+import { PostQueryRepository } from './post.query.repository';
 
 export class PostRepository {
-   static async getAllPosts(): Promise<OutputPostType[]> {
-      const posts = await postsCollection.find({}).toArray();
-      return posts.map(postMapper);
-   }
-
-   static async getPostById(id: string): Promise<OutputPostType | null> {
+   static async getPostById(id: string): Promise<PostDB | null> {
       const post = await postsCollection.findOne({ _id: new ObjectId(id) });
 
       if (!post) {
          return null;
       }
 
-      return postMapper(post);
+      return post;
    }
 
    static async createPost(
       postData: InputPostType
    ): Promise<OutputPostType | null> {
-      const blog = await BlogRepository.getBlogById(postData.blogId);
+      const blog = await BlogQueryRepository.getBlogById(postData.blogId);
 
       const newPost: PostDB = {
          ...postData,
@@ -35,7 +32,9 @@ export class PostRepository {
 
       const createdPost = await postsCollection.insertOne(newPost);
 
-      const post = await this.getPostById(createdPost.insertedId.toString());
+      const post = await PostQueryRepository.getPostById(
+         createdPost.insertedId.toString()
+      );
 
       if (!post) {
          return null;

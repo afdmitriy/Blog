@@ -4,20 +4,16 @@ import { blogMapper } from '../models/blog/mappers/blog-mapper';
 import { OutputBlogType } from '../models/blog/output/outputBlogModel';
 import { BlogDB } from '../models/blog/db/blog-db';
 import { InputBlogType } from '../models/blog/input/inputBlogModel';
+import { BlogQueryRepository } from './blog.query.repository';
 
 export class BlogRepository {
-   static async getAllBlogs(): Promise<OutputBlogType[]> {
-      const blogs = await blogsCollection.find({}).toArray();
-      return blogs.map(blogMapper);
-   }
-
-   static async getBlogById(id: string): Promise<OutputBlogType | null> {
+   static async getBlogById(id: string): Promise<BlogDB | null> {
       const blog = await blogsCollection.findOne({ _id: new ObjectId(id) });
 
       if (!blog) {
          return null;
       }
-      return blogMapper(blog);
+      return blog;
    }
 
    static async createBlog(
@@ -31,7 +27,7 @@ export class BlogRepository {
 
       const createdBlo = await blogsCollection.insertOne(createdBlog);
 
-      return this.getBlogById(createdBlo.insertedId.toString());
+      return BlogQueryRepository.getBlogById(createdBlo.insertedId.toString());
    }
 
    static async updateBlogById(
