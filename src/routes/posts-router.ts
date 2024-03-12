@@ -5,8 +5,18 @@ import { postValidation } from '../validators/post-validators';
 import { ObjectId } from 'mongodb';
 import { InputPostType } from '../models/post/input/inputPostModel';
 import { PostQueryRepository } from '../repositories/post.query.repository';
-import { RequestWithQuery } from '../models/common';
+import {
+   ParamType,
+   QueryInputModel,
+   RequestWithParamAndBody,
+   RequestWithParamsAndQuery,
+   RequestWithQuery,
+} from '../models/common';
 import { QueryPostInputModel } from '../models/post/input/query.post.input.model';
+import { commentValidation } from '../validators/comment.validators';
+import { accessTokenGuard } from '../middlewares/auth/accessTokenGuard';
+import { CommentService } from '../services/comment.service';
+import { CommentQueryRepository } from '../repositories/comment.query.repository';
 
 export const postRoute: Router = Router({});
 
@@ -85,10 +95,8 @@ postRoute.put(
          blogId: req.body.blogId,
       };
 
-      const updatedPost = PostRepository.updatePostById(
-         req.params.id,
-         updatePost
-      );
+      // const updatedPost =
+      await PostRepository.updatePostById(req.params.id, updatePost);
       res.sendStatus(204);
    }
 );
@@ -114,3 +122,85 @@ postRoute.delete('/:id', authMiddleware, async (req, res) => {
    }
    res.sendStatus(204);
 });
+// COMMENTSssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss
+postRoute.get(
+   '/:id/comments',
+   async (
+      req: RequestWithParamsAndQuery<ParamType, QueryInputModel>,
+      res: Response
+   ) => {
+      if (!ObjectId.isValid(req.params.id)) {
+         res.sendStatus(404);
+         return;
+      }
+      const postId = req.params.id;
+      const post = await PostRepository.getPostById(postId);
+
+      if (!post) {
+         res.sendStatus(404);
+         return;
+      }
+
+      const sortData = {
+         sortBy: req.query.sortBy ?? 'createdAt',
+         sortDirection: req.query.sortDirection ?? 'desc',
+         pageNumber: req.query.pageNumber ? +req.query.pageNumber : 1,
+         pageSize: req.query.pageSize ? +req.query.pageSize : 10,
+      };
+
+      const comment = await CommentQueryRepository.getCommentByPostId(
+         postId,
+         sortData
+      );
+
+      if (!comment) {
+         res.sendStatus(404);
+         return;
+      }
+
+      res.status(200).send(comment);
+   }
+);
+
+postRoute.post(
+   '/:id/comments',
+   accessTokenGuard,
+   commentValidation(),
+
+   async (
+      req: RequestWithParamAndBody<ParamType, { content: string }>,
+      res: Response
+   ) => {
+      const postId = req.params.id;
+      if (!ObjectId.isValid(postId)) {
+         res.sendStatus(404);
+         return;
+      }
+
+      const post = await PostRepository.getPostById(postId);
+
+      if (!post) {
+         res.sendStatus(404);
+         return;
+      }
+
+      const email = req.user?.email;
+      const login = req.user?.login;
+      const userId = req.user?.userId;
+      const content = req.body.content;
+
+      const comment = await CommentService.createComment(
+         postId,
+         content,
+         userId,
+         login
+      );
+
+      if (!comment) {
+         res.sendStatus(404);
+         return;
+      }
+
+      res.status(201).send(comment);
+   }
+);

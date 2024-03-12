@@ -2,21 +2,12 @@ import { ObjectId, WithId } from 'mongodb';
 import { blogsCollection, postsCollection } from '../db/db';
 import { blogMapper } from '../models/blog/mappers/blog-mapper';
 import { OutputBlogType } from '../models/blog/output/outputBlogModel';
-import { BlogDB } from '../models/blog/db/blog-db';
-import { InputBlogType } from '../models/blog/input/inputBlogModel';
-import { Pagination } from '../models/common';
+import { Pagination, SortGetData } from '../models/common';
 import { postMapper } from '../models/post/mappers/post-mapper';
 import { OutputPostType } from '../models/post/output/outputPostModel';
 
 type SortData = {
    searchNameTerm: string | null;
-   sortBy: string;
-   sortDirection: 'desc' | 'asc';
-   pageNumber: number;
-   pageSize: number;
-};
-
-type SortGetData = {
    sortBy: string;
    sortDirection: 'desc' | 'asc';
    pageNumber: number;
@@ -43,7 +34,7 @@ export class BlogQueryRepository {
 
       const blogs = await blogsCollection
          .find(filter)
-         .sort(sortBy, sortDirection)
+         .sort(sortBy, sortDirection) // не понял как здесь работает sort и является ли метод монговским или js. Если монговский то почему не JS
          .skip((pageNumber - 1) * pageSize)
          .limit(pageSize)
          .toArray();

@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { Request } from 'express';
 
 export type RequestWithParams<P> = Request<P, {}, {}, {}>;
 export type RequestWithBody<B> = Request<{}, {}, B, {}>;
@@ -16,4 +16,18 @@ export type Pagination<I> = {
    pageSize: number;
    totalCount: number;
    items: I[];
+};
+
+export type SortGetData = {
+   sortBy: string;
+   sortDirection: 'desc' | 'asc';
+   pageNumber: number;
+   pageSize: number;
+};
+
+export type QueryInputModel = {
+   sortBy?: string;
+   sortDirection?: 'desc' | 'asc';
+   pageNumber?: number;
+   pageSize?: number;
 };

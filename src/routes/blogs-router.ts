@@ -1,4 +1,4 @@
-import { Router, Request, Response } from 'express';
+import { Router, Response } from 'express';
 import { authMiddleware } from '../middlewares/auth/auth-midddleware';
 import { BlogRepository } from '../repositories/blog-repository';
 import { blogValidation } from '../validators/blog-validators';
@@ -6,6 +6,7 @@ import { ObjectId } from 'mongodb';
 import { InputBlogType } from '../models/blog/input/inputBlogModel';
 import {
    ParamType,
+   QueryInputModel,
    RequestWithBody,
    RequestWithParamAndBody,
    RequestWithParams,
@@ -17,13 +18,11 @@ import { BlogQueryRepository } from '../repositories/blog.query.repository';
 import { createPostFromBlogValidation } from '../validators/post-validators';
 import { CreatePostFromBlogInputModel } from '../models/blog/input/create.post.from.blog';
 import { BlogService } from '../services/blog.service';
-import { QueryBlogGetModel } from '../models/blog/input/query.blog.get.model';
 
 export const blogRoute: Router = Router({});
 
 blogRoute.get('/', async (req: RequestWithQuery<QueryBlogInputModel>, res) => {
    const sortData = {
-      // Не знаю могут ли они придти невалидные и надо ли это обработать
       searchNameTerm: req.query.searchNameTerm ?? null,
       sortBy: req.query.sortBy ?? 'createdAt',
       sortDirection: req.query.sortDirection ?? 'desc',
@@ -53,10 +52,7 @@ blogRoute.get('/:id', async (req: RequestWithParams<ParamType>, res) => {
 
 blogRoute.get(
    '/:id/posts',
-   async (
-      req: RequestWithParamsAndQuery<ParamType, QueryBlogGetModel>,
-      res
-   ) => {
+   async (req: RequestWithParamsAndQuery<ParamType, QueryInputModel>, res) => {
       const id = req.params.id;
       if (!ObjectId.isValid(id)) {
          res.sendStatus(404);

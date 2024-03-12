@@ -1,6 +1,5 @@
 import { ObjectId, WithId } from 'mongodb';
-import { blogsCollection } from '../db/db';
-import { blogMapper } from '../models/blog/mappers/blog-mapper';
+import { blogsCollection, postsCollection } from '../db/db';
 import { OutputBlogType } from '../models/blog/output/outputBlogModel';
 import { BlogDB } from '../models/blog/db/blog-db';
 import { InputBlogType } from '../models/blog/input/inputBlogModel';
@@ -55,6 +54,7 @@ export class BlogRepository {
    static async deleteBlogById(id: string): Promise<boolean> {
       try {
          const res = await blogsCollection.deleteOne({ _id: new ObjectId(id) });
+         await postsCollection.deleteMany({ blogId: id });
 
          return !!res.deletedCount;
       } catch (error) {

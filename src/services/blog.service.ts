@@ -1,8 +1,6 @@
 import { CreatePostFromBlogInputModel } from '../models/blog/input/create.post.from.blog';
-import { QueryBlogGetModel } from '../models/blog/input/query.blog.get.model';
 import { PostDB } from '../models/post/db/post-db';
 import { OutputPostType } from '../models/post/output/outputPostModel';
-import { BlogRepository } from '../repositories/blog-repository';
 import { BlogQueryRepository } from '../repositories/blog.query.repository';
 import { PostRepository } from '../repositories/post-repository';
 
