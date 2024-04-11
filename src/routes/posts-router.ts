@@ -4,6 +4,22 @@ import { PostRepository } from '../repositories/post-repository';
 import { postValidation } from '../validators/post-validators';
 import { ObjectId } from 'mongodb';
 import { InputPostType } from '../models/post/input/inputPostModel';
+<<<<<<< Updated upstream
+=======
+import { PostQueryRepository } from '../repositories/post.query.repository';
+import {
+   ParamType,
+   QueryInputModel,
+   RequestWithParamAndBody,
+   RequestWithParamsAndQuery,
+   RequestWithQuery,
+} from '../models/common';
+import { QueryPostInputModel } from '../models/post/input/query.post.input.model';
+import { commentValidation } from '../validators/comment.validators';
+import { accessTokenGuard } from '../middlewares/auth/token.guards';
+import { CommentService } from '../services/comment.service';
+import { CommentQueryRepository } from '../repositories/comment.query.repository';
+>>>>>>> Stashed changes
 
 export const postRoute: Router = Router({});
 

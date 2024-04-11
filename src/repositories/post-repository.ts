@@ -1,5 +1,5 @@
 import { ObjectId, WithId } from 'mongodb';
-import { blogsCollection, postsCollection } from '../db/db';
+import { blogsCollection, commentsCollection, postsCollection } from '../db/db';
 import { postMapper } from '../models/post/mappers/post-mapper';
 import { OutputPostType } from '../models/post/output/outputPostModel';
 import { PostDB } from '../models/post/db/post-db';
@@ -70,6 +70,8 @@ export class PostRepository {
    static async deletePostById(id: string): Promise<boolean> {
       try {
          const res = await postsCollection.deleteOne({ _id: new ObjectId(id) });
+
+         await commentsCollection.deleteMany({ postId: id });
 
          return !!res.deletedCount;
       } catch (error) {
