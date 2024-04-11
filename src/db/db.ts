@@ -2,23 +2,13 @@ import dotenv from 'dotenv';
 import { MongoClient } from 'mongodb';
 import { BlogDB } from '../models/blog/db/blog-db';
 import { PostDB } from '../models/post/db/post-db';
-<<<<<<< HEAD
-
-=======
-<<<<<<< Updated upstream
-=======
->>>>>>> 7db2eaa7aef868496a810db4614d47674301bd5f
 import { UsersDB } from '../models/users/db/users.db';
 import { CommentDB } from '../models/comment/db/comment.db';
 import { EmailConfirmDataDB } from '../models/common/email.confirmation/db/email.confirmation.db';
 import { RefreshTokenBlackListDB } from '../models/common/email.confirmation/db/refresh.token.black.list';
 import { UserSessionsDB } from '../models/auth/db/user.sessions.type';
 import { ApiAccessLogsDB } from '../models/common/email.confirmation/db/api.access.logs';
-<<<<<<< HEAD
 
-=======
->>>>>>> Stashed changes
->>>>>>> 7db2eaa7aef868496a810db4614d47674301bd5f
 dotenv.config();
 
 export const mongoURI = process.env.MONGO_URL || 'error URI';
@@ -31,11 +21,7 @@ const dataBase = client.db('blog-db');
 
 export const blogsCollection = dataBase.collection<BlogDB>('blogs');
 export const postsCollection = dataBase.collection<PostDB>('posts');
-<<<<<<< HEAD
-=======
-<<<<<<< Updated upstream
-=======
->>>>>>> 7db2eaa7aef868496a810db4614d47674301bd5f
+
 export const usersCollection = dataBase.collection<UsersDB>('users');
 export const commentsCollection = dataBase.collection<CommentDB>('comments');
 export const emailConfirmDataCollection =
@@ -46,13 +32,8 @@ export const userSessionsCollection =
    dataBase.collection<UserSessionsDB>('userSessions');
 export const apiAccessLogsCollection =
    dataBase.collection<ApiAccessLogsDB>('apiAccessLogs');
-<<<<<<< HEAD
 
 
-=======
->>>>>>> Stashed changes
-
->>>>>>> 7db2eaa7aef868496a810db4614d47674301bd5f
 export const connectToDB = async () => {
    try {
       await client.connect();
