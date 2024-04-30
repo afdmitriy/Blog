@@ -1,5 +1,5 @@
-import { ObjectId, WithId } from 'mongodb';
-import { blogsCollection } from '../db/db';
+import { ObjectId } from 'mongodb';
+import { BlogModelClass } from '../db/db';
 import { blogMapper } from '../models/blog/mappers/blog-mapper';
 import { OutputBlogType } from '../models/blog/output/outputBlogModel';
 import { BlogDB } from '../models/blog/db/blog-db';
@@ -7,12 +7,13 @@ import { InputBlogType } from '../models/blog/input/inputBlogModel';
 
 export class BlogRepository {
    static async getAllBlogs(): Promise<OutputBlogType[]> {
-      const blogs = await blogsCollection.find({}).toArray();
+
+      const blogs = await BlogModelClass.find({}).lean().exec();
       return blogs.map(blogMapper);
    }
 
    static async getBlogById(id: string): Promise<OutputBlogType | null> {
-      const blog = await blogsCollection.findOne({ _id: new ObjectId(id) });
+      const blog = await BlogModelClass.findOne({ _id: id }).lean();
 
       if (!blog) {
          return null;
@@ -25,13 +26,14 @@ export class BlogRepository {
    ): Promise<OutputBlogType | null> {
       const createdBlog: BlogDB = {
          ...createdData,
-         createdAt: new Date().toISOString(),
+         createdAt: new Date(),
          isMembership: false,
       };
+      console.log(createdBlog);
+      const createdBlo = await BlogModelClass.create(createdBlog);
+      console.log('Blog created');
 
-      const createdBlo = await blogsCollection.insertOne(createdBlog);
-
-      return this.getBlogById(createdBlo.insertedId.toString());
+      return this.getBlogById(createdBlo._id.toString());
    }
 
    static async updateBlogById(
@@ -39,7 +41,7 @@ export class BlogRepository {
       updatedData: InputBlogType
    ): Promise<boolean> {
       try {
-         const res = await blogsCollection.updateOne(
+         const res = await BlogModelClass.updateOne(
             { _id: new ObjectId(id) },
             {
                $set: {
@@ -58,7 +60,7 @@ export class BlogRepository {
 
    static async deleteBlogById(id: string): Promise<boolean> {
       try {
-         const res = await blogsCollection.deleteOne({ _id: new ObjectId(id) });
+         const res = await BlogModelClass.deleteOne({ _id: id});
 
          return !!res.deletedCount;
       } catch (error) {

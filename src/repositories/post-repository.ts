@@ -1,5 +1,5 @@
 import { ObjectId, WithId } from 'mongodb';
-import { blogsCollection, commentsCollection, postsCollection } from '../db/db';
+import { CommentModelClass, PostModelClass } from '../db/db';
 import { postMapper } from '../models/post/mappers/post-mapper';
 import { OutputPostType } from '../models/post/output/outputPostModel';
 import { PostDB } from '../models/post/db/post-db';
@@ -8,12 +8,12 @@ import { BlogRepository } from './blog-repository';
 
 export class PostRepository {
    static async getAllPosts(): Promise<OutputPostType[]> {
-      const posts = await postsCollection.find({}).toArray();
+      const posts = await PostModelClass.find({}).exec();
       return posts.map(postMapper);
    }
 
    static async getPostById(id: string): Promise<OutputPostType | null> {
-      const post = await postsCollection.findOne({ _id: new ObjectId(id) });
+      const post = await PostModelClass.findOne({ _id: id }).lean();
 
       if (!post) {
          return null;
@@ -23,19 +23,12 @@ export class PostRepository {
    }
 
    static async createPost(
-      postData: InputPostType
+      newPost: PostDB
    ): Promise<OutputPostType | null> {
-      const blog = await BlogRepository.getBlogById(postData.blogId);
 
-      const newPost: PostDB = {
-         ...postData,
-         blogName: blog!.name,
-         createdAt: new Date().toISOString(),
-      };
+      const createdPost = await PostModelClass.create(newPost);
 
-      const createdPost = await postsCollection.insertOne(newPost);
-
-      const post = await this.getPostById(createdPost.insertedId.toString());
+      const post = await this.getPostById(createdPost._id.toString());
 
       if (!post) {
          return null;
@@ -49,8 +42,8 @@ export class PostRepository {
       updatedData: InputPostType
    ): Promise<boolean> {
       try {
-         const res = await postsCollection.updateOne(
-            { _id: new ObjectId(id) },
+         const res = await PostModelClass.updateOne(
+            { _id: id },
             {
                $set: {
                   title: updatedData.title,
@@ -69,13 +62,14 @@ export class PostRepository {
 
    static async deletePostById(id: string): Promise<boolean> {
       try {
-         const res = await postsCollection.deleteOne({ _id: new ObjectId(id) });
+         const res = await PostModelClass.deleteOne({ _id: id });
 
-         await commentsCollection.deleteMany({ postId: id });
+         await CommentModelClass.deleteMany({ postId: id });
 
          return !!res.deletedCount;
       } catch (error) {
          return false;
       }
    }
+
 }

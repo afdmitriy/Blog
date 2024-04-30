@@ -1,4 +1,4 @@
-import { refreshTokenBlackListCollection } from '../db/db';
+import { RefreshTokenBlackListModelClass } from '../db/db';
 import { RefreshTokenBlackListDB } from '../models/common/email.confirmation/db/refresh.token.black.list';
 
 export class RefreshTokenBlackListRepository {
@@ -6,11 +6,11 @@ export class RefreshTokenBlackListRepository {
       token: RefreshTokenBlackListDB
    ): Promise<boolean> {
       try {
-         const createdToken = await refreshTokenBlackListCollection.insertOne(
+         const createdToken = await RefreshTokenBlackListModelClass.create(
             token
          );
 
-         return !!createdToken.insertedId;
+         return !!createdToken._id;
       } catch (error) {
          console.log(error);
          return false;
@@ -20,9 +20,9 @@ export class RefreshTokenBlackListRepository {
    static async findInvalidRefreshToken(
       token: string
    ): Promise<RefreshTokenBlackListDB | null> {
-      const resToken = await refreshTokenBlackListCollection.findOne({
+      const resToken = await RefreshTokenBlackListModelClass.findOne({
          refreshToken: token,
-      });
+      }).lean();
       return resToken;
    }
 }

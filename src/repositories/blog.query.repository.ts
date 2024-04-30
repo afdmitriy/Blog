@@ -1,5 +1,5 @@
-import { ObjectId, WithId } from 'mongodb';
-import { blogsCollection, postsCollection } from '../db/db';
+import { ObjectId } from 'mongodb';
+import { BlogModelClass, PostModelClass} from '../db/db';
 import { blogMapper } from '../models/blog/mappers/blog-mapper';
 import { OutputBlogType } from '../models/blog/output/outputBlogModel';
 import { Pagination, SortGetData } from '../models/common';
@@ -32,14 +32,15 @@ export class BlogQueryRepository {
          };
       }
 
-      const blogs = await blogsCollection
+      const blogs = await BlogModelClass
          .find(filter)
-         .sort(sortBy, sortDirection) // не понял как здесь работает sort и является ли метод монговским или js. Если монговский то почему не JS
+         .sort({ [sortBy]: sortDirection }) 
          .skip((pageNumber - 1) * pageSize)
          .limit(pageSize)
-         .toArray();
+         .lean()
+         .exec();
 
-      const totalCount = await blogsCollection.countDocuments(filter);
+      const totalCount = await BlogModelClass.countDocuments(filter);
 
       const pagesCount = Math.ceil(totalCount / pageSize);
 
@@ -53,7 +54,7 @@ export class BlogQueryRepository {
    }
 
    static async getBlogById(id: string): Promise<OutputBlogType | null> {
-      const blog = await blogsCollection.findOne({ _id: new ObjectId(id) });
+      const blog = await BlogModelClass.findOne({ _id: id }).lean();
 
       if (!blog) {
          return null;
@@ -61,35 +62,5 @@ export class BlogQueryRepository {
       return blogMapper(blog);
    }
 
-   static async getBlogByIdWithQuery(
-      id: string,
-      sortData: SortGetData
-   ): Promise<Pagination<OutputPostType> | null> {
-      const check = await this.getBlogById(id);
-      if (!check) {
-         return null;
-      }
-      const { sortDirection, sortBy, pageNumber, pageSize } = sortData;
-
-      // let filter = { blogId: id };
-
-      const blogs = await postsCollection
-         .find({ blogId: id })
-         .sort(sortBy, sortDirection)
-         .skip((pageNumber - 1) * pageSize)
-         .limit(pageSize)
-         .toArray();
-
-      const totalCount = await postsCollection.countDocuments({ blogId: id });
-
-      const pagesCount = Math.ceil(totalCount / pageSize);
-
-      return {
-         pagesCount,
-         page: pageNumber,
-         pageSize,
-         totalCount,
-         items: blogs.map(postMapper),
-      };
-   }
+   
 }

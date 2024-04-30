@@ -2,7 +2,7 @@ import { Request, Response, Router } from 'express';
 import { RequestWithBody } from '../models/common';
 import { InputLoginModel } from '../models/login/input/input.login.model';
 import { UserService } from '../services/user.service';
-import { authValidation, codeValidation } from '../validators/auth.validators';
+import { authValidation, codeValidation, newPasswordValidation, passwordValidation } from '../validators/auth.validators';
 import {
    accessTokenGuard,
    refreshTokenGuard,
@@ -10,6 +10,7 @@ import {
 import { UserRepository } from '../repositories/user.repository';
 import {
    emailResendValidation,
+   emailValidation,
    registrationValidation,
 } from '../validators/users.validators';
 import { PostUserModel } from '../models/users/input/post.users.model';
@@ -240,4 +241,35 @@ authRoute.post(
    }
 );
 
-// новый логин = новый девайс
+authRoute.post(
+   '/password-recovery', countApiRequestMiddleware, emailValidation(),
+   async (req: Request, res: Response) => {
+      try {
+         await AuthService.userPasswordRecovery(req.body.email);
+         res.sendStatus(204);    
+         return
+      } catch (error) {
+         console.log(error);
+         res.sendStatus(500);
+         return
+      }
+   }
+);
+
+authRoute.post(
+   '/new-password', countApiRequestMiddleware, codeValidation(), newPasswordValidation(),
+   async (req: Request, res: Response) => {
+      try {
+         const result = await AuthService.setNewUserPassword(req.body.recoveryCode, req.body.newPassword)
+         if (result.status === ResultStatus.SUCCESS) {
+            res.sendStatus(204);
+            return
+         }
+         res.sendStatus(500);
+      } catch (error) {
+         console.log(error);
+         res.sendStatus(500);
+         return
+      }
+   }
+);

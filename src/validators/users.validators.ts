@@ -64,6 +64,15 @@ const emailResendValidator: ValidationChain = body('email').custom(
       }
    }
 );
+
+const isUserExistValidator: ValidationChain = body('email').custom(
+   async (value) => {
+      const user = await UserRepository.findUserByLoginOrEmail(value);
+      if (!user) {
+         throw new Error('Email doesnt exist');
+      }
+   }
+);
 // .withMessage('Email doesnt exist');
 
 export const usersValidation = () => [
@@ -88,3 +97,7 @@ export const emailResendValidation = () => [
    emailResendValidator,
    inputValidationMiddleware,
 ];
+
+export const emailValidation = () => [emailValidator, inputValidationMiddleware];
+
+export const isUserExistValidation = () => [isUserExistValidator, inputValidationMiddleware];

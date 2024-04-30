@@ -1,9 +1,9 @@
-import { OutputCommentType } from './output.comment.model';
+import { OutputCommentWithLikeType } from './output.comment.with.like.model';
 
 export type OutputCommentsWithQuery = {
    pagesCount: number;
    page: number;
    pageSize: number;
    totalCount: number;
-   items: OutputCommentType[];
+   items: OutputCommentWithLikeType[];
 };

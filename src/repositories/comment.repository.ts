@@ -1,7 +1,8 @@
 import { ObjectId } from 'mongodb';
-import { commentsCollection } from '../db/db';
+import { CommentModelClass } from '../db/db';
 import { OutputCommentType } from '../models/comment/output/output.comment.model';
 import { CommentQueryRepository } from './comment.query.repository';
+import { commentMapper } from '../models/comment/mapper/comment.mapper';
 
 type InputCommentModel = {
    content: string;
@@ -9,7 +10,7 @@ type InputCommentModel = {
       userId: string;
       userLogin: string;
    };
-   createdAt: string;
+   createdAt: Date;
    postId: string;
 };
 
@@ -18,10 +19,10 @@ export class CommentRepository {
       commentData: InputCommentModel
    ): Promise<OutputCommentType | null | false> {
       try {
-         const createdComment = await commentsCollection.insertOne(commentData);
+         const createdComment = await CommentModelClass.create(commentData);
 
          const comment = await CommentQueryRepository.getCommentById(
-            createdComment.insertedId.toString()
+            createdComment._id.toString()
          );
 
          if (!comment) {
@@ -40,8 +41,8 @@ export class CommentRepository {
       content: string
    ): Promise<boolean> {
       try {
-         const res = await commentsCollection.updateOne(
-            { _id: new ObjectId(id) },
+         const res = await CommentModelClass.updateOne(
+            { _id: id },
             {
                $set: {
                   content: content,
@@ -57,8 +58,8 @@ export class CommentRepository {
 
    static async deleteCommentById(id: string): Promise<boolean> {
       try {
-         const res = await commentsCollection.deleteOne({
-            _id: new ObjectId(id),
+         const res = await CommentModelClass.deleteOne({
+            _id: id,
          });
 
          return !!res.deletedCount;
@@ -70,14 +71,32 @@ export class CommentRepository {
 
    static async doesCommentExistById(id: string) {
       try {
-         const comment = await commentsCollection.findOne({
-            _id: new ObjectId(id),
-         });
+         const comment = await CommentModelClass.findOne({
+            _id: id,
+         }).lean();
 
          if (!comment) {
             return null;
          }
          return true;
+      } catch (error) {
+         console.log(error);
+         return false;
+      }
+   }
+
+   static async getCommentById(
+      id: string
+   ): Promise<OutputCommentType | null | false> {
+      try {
+         const comment = await CommentModelClass.findOne({
+            _id: id,
+         }).lean();
+
+         if (!comment) {
+            return null;
+         }
+         return commentMapper(comment);
       } catch (error) {
          console.log(error);
          return false;

@@ -1,6 +1,4 @@
 import { add } from 'date-fns';
-import { PostUserModel } from '../models/users/input/post.users.model';
-import { UserService } from './user.service';
 import { EmailConfirmationRepository } from '../repositories/email.confirmation.repository';
 import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
@@ -10,28 +8,31 @@ dotenv.config();
 
 const mailerLogin = process.env.MAILER_LOGIN || 'str';
 const mailerPassword = process.env.MAILER_PASSWORD || 'str';
+
+const transporter = nodemailer.createTransport({
+   service: 'Mail.ru',
+   auth: {
+      user: mailerLogin,
+      pass: mailerPassword,
+   },
+});
 export class EmailConfirmationService {
-   static async createUserAndEmailData(
-      userData: PostUserModel,
+   
+   static async createConfirmationData(
+      userId: string,
       confirmationCode: string
    ): Promise<boolean> {
       try {
-         const user = await UserService.createUser(userData);
-         if (!user) {
-            console.log(
-               'EmailConfirmationService.createUserAndEmailData, user error'
-            );
-            return false;
-         }
+
 
          const emailData: EmailConfirmDataDB = {
-            userID: user.id,
+            userID: userId,
             confirmationCode: confirmationCode,
             expirationDate: add(new Date(), { days: 1 }),
             isConfirmed: false,
          };
          const email =
-            await EmailConfirmationRepository.createEmailConfirmation(
+            await EmailConfirmationRepository.createConfirmationCodeData(
                emailData
             );
          if (!email) {
@@ -51,13 +52,6 @@ export class EmailConfirmationService {
    }
 
    static async sendConfirmationMail(confirmationCode: string, email: string) {
-      const transporter = nodemailer.createTransport({
-         service: 'Mail.ru',
-         auth: {
-            user: mailerLogin,
-            pass: mailerPassword,
-         },
-      });
       try {
          const info = await transporter.sendMail({
             from: `"Blog's server" <af.dmitr.test@mail.ru>`, // sender address
@@ -67,6 +61,24 @@ export class EmailConfirmationService {
             html: `<h1>Thank for your registration</h1>
                   <p>To finish registration please follow the link below:
                       <a href='https://somesite.com/confirm-email?code=${confirmationCode}'>complete registration</a>
+                  </p>`,
+         });
+         console.log('Message sent: %s', info.messageId);
+      } catch (error) {
+         console.log(error);
+      }
+   }
+
+   static async sendPasswordRecoveryMail(code: string, email: string) {
+      try {
+         const info = await transporter.sendMail({
+            from: `"Blog's server" <af.dmitr.test@mail.ru>`, // sender address
+            to: `af.dmitr.test@mail.ru, ${email}`, // list of receivers
+            subject: 'Password recovery', // Subject line
+            //text: 'Hello world?', // plain text body
+            html: `<h1>Thank for your registration</h1>
+                  <p>To finish password recovery please follow the link below:
+                      <a href='https://somesite.com/password-recovery?recoveryCode=${code}'>recovery password</a>
                   </p>`,
          });
          console.log('Message sent: %s', info.messageId);

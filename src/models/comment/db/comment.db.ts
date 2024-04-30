@@ -5,5 +5,5 @@ export type CommentDB = {
       userId: string;
       userLogin: string;
    };
-   createdAt: string;
+   createdAt: Date;
 };

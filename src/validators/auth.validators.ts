@@ -14,19 +14,29 @@ const passwordValidator: ValidationChain = body('password')
    .isLength({ min: 6, max: 20 })
    .withMessage('Incorrect password length');
 
-const codeValidator: ValidationChain = body('code')
+const newPasswordValidator: ValidationChain = body('newPassword')
+   .isString()
+   .withMessage('password must be a string')
+   .trim()
+   .isLength({ min: 6, max: 20 })
+   .withMessage('Incorrect password length');
+
+const codeValidator: ValidationChain = body('recoveryCode')
    .isString()
    .withMessage('code must be a string')
    .trim()
    .custom(async (value) => {
       const confirmData =
-         await EmailConfirmationRepository.findEmailConfirmationDataByConfirmCode(
+         await EmailConfirmationRepository.findConfirmationDataByConfirmCode(
             value
          );
+      
       if (!confirmData) {
          throw new Error('Invalid code');
       }
-
+      if (confirmData.expirationDate < new Date()) {
+         throw new Error('Code expired');
+      }
       if (confirmData.isConfirmed === true) {
          throw new Error('Code already confirmed');
       }
@@ -42,4 +52,6 @@ export const authValidation = () => [
    inputValidationMiddleware,
 ];
 
+export const newPasswordValidation = () => [newPasswordValidator, inputValidationMiddleware];
 export const codeValidation = () => [codeValidator, inputValidationMiddleware];
+export const passwordValidation = () => [passwordValidator, inputValidationMiddleware];

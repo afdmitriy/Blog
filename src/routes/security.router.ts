@@ -2,7 +2,7 @@ import { Request, Response, Router } from 'express';
 import { refreshTokenGuard } from '../middlewares/auth/token.guards';
 import { SecurityService } from '../services/security.service';
 import { SessionRepository } from '../repositories/device.repository';
-import { RequestWithParams, RequestWithQuery } from '../models/common';
+import { RequestWithParams } from '../models/common';
 import { ResultStatus } from '../common/enums/ResultToRouterStatus';
 
 export const securityRoute: Router = Router({});

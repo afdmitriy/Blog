@@ -42,3 +42,11 @@ export const postValidation = () => [
    blogIdValidator,
    inputValidationMiddleware,
 ];
+
+export const createPostFromBlogValidation = () => [
+   // Обязательно должна быть функция по документации
+   titleValidator,
+   shortDescriptionValidator,
+   contentValidator,
+   inputValidationMiddleware,
+];

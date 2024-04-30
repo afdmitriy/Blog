@@ -1,5 +1,5 @@
 import { ObjectId } from 'mongodb';
-import { commentsCollection } from '../db/db';
+import { CommentModelClass } from '../db/db';
 import { commentMapper } from '../models/comment/mapper/comment.mapper';
 import { OutputCommentType } from '../models/comment/output/output.comment.model';
 import { Pagination, SortGetData } from '../models/common';
@@ -9,9 +9,9 @@ export class CommentQueryRepository {
       id: string
    ): Promise<OutputCommentType | null | false> {
       try {
-         const comment = await commentsCollection.findOne({
-            _id: new ObjectId(id),
-         });
+         const comment = await CommentModelClass.findOne({
+            _id: id,
+         }).lean();
 
          if (!comment) {
             return null;
@@ -29,19 +29,20 @@ export class CommentQueryRepository {
    ): Promise<Pagination<OutputCommentType> | null> {
       const { sortDirection, sortBy, pageNumber, pageSize } = sortData;
 
-      const comments = await commentsCollection
+      const comments = await CommentModelClass
          .find({ postId: postId })
-         .sort(sortBy, sortDirection)
+         .sort({ [sortBy]: sortDirection })
          .skip((pageNumber - 1) * pageSize)
          .limit(pageSize)
-         .toArray();
+         .lean()
+         .exec();
 
-      const totalCount = await commentsCollection.countDocuments({
+      const totalCount = await CommentModelClass.countDocuments({
          postId: postId,
       });
 
       const pagesCount = Math.ceil(totalCount / pageSize);
-
+      
       return {
          pagesCount,
          page: pageNumber,

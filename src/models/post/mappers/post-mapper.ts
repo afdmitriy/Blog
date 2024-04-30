@@ -10,6 +10,6 @@ export const postMapper = (post: WithId<PostDB>): OutputPostType => {
       content: post.content,
       blogId: post.blogId,
       blogName: post.blogName,
-      createdAt: post.createdAt,
+      createdAt: post.createdAt.toISOString(),
    };
 };

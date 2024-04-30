@@ -26,7 +26,7 @@ export class SecurityService {
          //    const isNotExpired = checkExpirationDate(device.expirationDate);
          //    return isNotExpired;
          // })
-         .map((device) => {
+         .map((device: any) => {
             return {
                deviceId: device._id,
                ip: device.ip,

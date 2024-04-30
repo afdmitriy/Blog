@@ -1,25 +1,25 @@
-import { ObjectId, WithId } from 'mongodb';
+import { ObjectId } from 'mongodb';
 import { EmailConfirmDataDB } from '../models/common/email.confirmation/db/email.confirmation.db';
-import { emailConfirmDataCollection } from '../db/db';
+import { EmailConfirmDataModelClass } from '../db/db';
 import { OutputEmailConfirmationDataType } from '../models/common/email.confirmation/output.email.confirmation/output.email.confirmation';
 import { emailConfirmationDataMapper } from '../models/common/email.confirmation/mappers/email.confirmation.mapper';
 
 export class EmailConfirmationRepository {
-   static async createEmailConfirmation(
+   static async createConfirmationCodeData(
       emailConfirmData: EmailConfirmDataDB
    ): Promise<boolean> {
       console.log(`Repository ${emailConfirmData.confirmationCode}`);
       try {
-         const createdEmailData = await emailConfirmDataCollection.insertOne(
+         const createdEmailData = await EmailConfirmDataModelClass.create(
             emailConfirmData
          );
-         const data = await this.findEmailConfirmationDataByUserId(
-            emailConfirmData.userID
-         );
-         if (!data) {
+         // const data = await this.findEmailConfirmationDataByUserId(
+         //    emailConfirmData.userID
+         // );
+         if (!createdEmailData._id) {
             return false;
          }
-         console.log(data);
+         
          return true;
       } catch (error) {
          console.log(error);
@@ -31,11 +31,11 @@ export class EmailConfirmationRepository {
       userID: string
    ): Promise<OutputEmailConfirmationDataType | null | false> {
       try {
-         const emailConfirmationData = await emailConfirmDataCollection.findOne(
+         const emailConfirmationData = await EmailConfirmDataModelClass.findOne(
             {
                userID: userID,
             }
-         );
+         ).lean();
 
          if (!emailConfirmationData) {
             return null;
@@ -47,15 +47,15 @@ export class EmailConfirmationRepository {
       }
    }
 
-   static async findEmailConfirmationDataByConfirmCode(
+   static async findConfirmationDataByConfirmCode(
       confirmCode: string
    ): Promise<OutputEmailConfirmationDataType | null | false> {
       try {
-         const emailConfirmationData = await emailConfirmDataCollection.findOne(
+         const emailConfirmationData = await EmailConfirmDataModelClass.findOne(
             {
                confirmationCode: confirmCode,
             }
-         );
+         ).lean();
 
          if (!emailConfirmationData) {
             console.log(`44`);
@@ -70,8 +70,8 @@ export class EmailConfirmationRepository {
 
    static async confirmEmail(id: string) {
       try {
-         const res = await emailConfirmDataCollection.updateOne(
-            { _id: new ObjectId(id) },
+         const res = await EmailConfirmDataModelClass.updateOne(
+            { _id: id },
             {
                $set: {
                   isConfirmed: true,
@@ -87,7 +87,7 @@ export class EmailConfirmationRepository {
 
    static async updateConfirmationCode(code: string, userID: string) {
       try {
-         const res = await emailConfirmDataCollection.updateOne(
+         const res = await EmailConfirmDataModelClass.updateOne(
             { userID: userID },
             {
                $set: {
@@ -101,4 +101,6 @@ export class EmailConfirmationRepository {
          return false;
       }
    }
+
+   
 }

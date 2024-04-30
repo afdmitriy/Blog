@@ -9,7 +9,7 @@ const secretKey = process.env.SECRET_KEY || 'YOURSECRETKEYGOESHERE';
 export class JWTService {
    static async createJWT(userId: string): Promise<string> {
       const token = jwt.sign({ userId }, secretKey, {
-         expiresIn: 10,
+         expiresIn: '600000',
       });
       return token;
    }

@@ -1,6 +1,6 @@
 import { ObjectId } from 'mongodb';
 import { userMapper } from '../models/users/mappers/user.mapper';
-import { usersCollection } from '../db/db';
+import { UserModelClass} from '../db/db';
 import { OutputUserType } from '../models/users/output/output.user.type';
 import { OutputUsersWithQuery } from '../models/users/output/output.users.query.type';
 
@@ -26,41 +26,32 @@ export class UserQueryRepository {
          searchLoginTerm,
       } = sortData;
 
-      let filter: any = [];
+      let filter: any = {};
 
       if (searchLoginTerm) {
-         filter.push({
-            login: {
+         filter.login = {
                $regex: searchLoginTerm,
                $options: 'i',
-            },
-         });
+            }
       }
 
       if (searchEmailTerm) {
-         filter.push({
-            email: {
+         filter.email = {
                $regex: searchEmailTerm,
                $options: 'i',
-            },
-         });
+            }
       }
 
-      // Если ни одно из условий не задано, ищем все документы
-      if (filter.length === 0) {
-         filter = [{}];
-      }
+
       try {
-         const users = await usersCollection
-            .find({ $or: filter })
-            .sort(sortBy, sortDirection)
+         const users = await UserModelClass
+            .find(filter)
+            .sort({[sortBy]: sortDirection})
             .skip((pageNumber - 1) * pageSize)
-            .limit(pageSize)
-            .toArray();
+            .limit(pageSize).lean()
+            
 
-         const totalCount = await usersCollection.countDocuments({
-            $or: filter,
-         });
+         const totalCount = await UserModelClass.countDocuments(filter);
          const pagesCount = Math.ceil(totalCount / pageSize);
 
          return {
@@ -80,8 +71,8 @@ export class UserQueryRepository {
       id: string
    ): Promise<OutputUserType | null | false> {
       try {
-         const user = await usersCollection.findOne({ _id: new ObjectId(id) });
-
+         const user = await UserModelClass.findOne({ _id: id }).lean();
+         
          if (!user) {
             return null;
          }

@@ -1,4 +1,4 @@
-import { userSessionsCollection } from '../db/db';
+import { SessionModelClass } from '../db/db';
 import { UserSessionsDB } from '../models/auth/db/user.sessions.type';
 import { ObjectId } from 'mongodb';
 import { sessionMapper } from '../models/auth/mappers/session.repo.mapper';
@@ -10,13 +10,13 @@ export class SessionRepository {
       sessionData: UserSessionsDB
    ): Promise<string | false> {
       try {
-         const createdSession = await userSessionsCollection.insertOne(
+         const createdSession = await SessionModelClass.create(
             sessionData
          );
-         if (!createdSession.insertedId) {
+         if (!createdSession._id) {
             return false;
          }
-         return createdSession.insertedId.toString();
+         return createdSession._id.toString();
       } catch (error) {
          console.log(error);
          return false;
@@ -26,9 +26,9 @@ export class SessionRepository {
    static async findSessionById(
       sessionId: string
    ): Promise<UserSessionOutputType | null> {
-      const session = await userSessionsCollection.findOne({
-         _id: new ObjectId(sessionId),
-      });
+      const session = await SessionModelClass.findOne({
+         _id: sessionId,
+      }).lean();
       if (!session) {
          return null;
       }
@@ -37,8 +37,8 @@ export class SessionRepository {
 
    static async deleteSessionById(sessionId: string) {
       try {
-         const res = await userSessionsCollection.deleteOne({
-            _id: new ObjectId(sessionId),
+         const res = await SessionModelClass.deleteOne({
+            _id: sessionId,
          });
 
          return !!res.deletedCount;
@@ -53,9 +53,9 @@ export class SessionRepository {
          if (!currentSession) {
             throw new Error('Session not found');
          }
-         const isDeleted = await userSessionsCollection.deleteMany({
+         const isDeleted = await SessionModelClass.deleteMany({
             userID: currentSession.userID,
-            _id: { $ne: new ObjectId(currentSession.sessionID) }, // Исключаем текущую сессию из удаления
+            _id: { $ne: currentSession.sessionID }, // Исключаем текущую сессию из удаления
          });
          return !!isDeleted.deletedCount;
       } catch (error) {
@@ -66,8 +66,8 @@ export class SessionRepository {
 
    static async updateSessionLiveTime(data: RefreshDataType) {
       try {
-         const res = await userSessionsCollection.updateOne(
-            { _id: new ObjectId(data.deviceID) },
+         const res = await SessionModelClass.updateOne(
+            { _id: data.deviceID },
             {
                $set: {
                   issuedAt: data.dateNow,

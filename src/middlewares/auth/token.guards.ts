@@ -22,6 +22,20 @@ export const accessTokenGuard = async (
    return;
 };
 
+// export const isUserLogged = async (
+//    req: Request,
+//    res: Response,
+//    next: NextFunction
+// ) => {
+//    if (!req.headers.authorization) {
+//       req.user = null;
+//       next();
+//       return;
+//    }
+//    res.sendStatus(401);
+//    return;
+// };
+
 export const refreshTokenGuard = async (
    req: Request,
    res: Response,
@@ -42,3 +56,6 @@ export const refreshTokenGuard = async (
    res.sendStatus(401);
    return;
 };
+
+
+      

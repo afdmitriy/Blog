@@ -10,11 +10,12 @@ import { UserRepository } from '../repositories/user.repository';
 import { EmailConfirmationService } from './email.confirmation.service';
 import { v4 as uuidv4 } from 'uuid';
 import dotenv from 'dotenv';
+import { UserService } from './user.service';
 
 dotenv.config();
 
 export const RefreshTokenLiveTime =
-   process.env.REFRESH_TOKEN_LIVE_TIME || '20000';
+   process.env.REFRESH_TOKEN_LIVE_TIME || 'str';
 
 export type UserSessionData = {
    userID: string;
@@ -32,23 +33,27 @@ export class AuthService {
    static async userRegistration(userData: PostUserModel): Promise<boolean> {
       const token = uuidv4();
       try {
-         const isCreate = await EmailConfirmationService.createUserAndEmailData(
-            userData,
+         const newUser = await UserService.createUser(userData);
+         if (!newUser) {
+            return false;
+         }
+         const isCreate = await EmailConfirmationService.createConfirmationData(
+            newUser.id,
             token
          );
          if (!isCreate) {
             console.log('Error: authService.userRegistration, isCreate');
             return false;
          }
-         const user = await UserRepository.getUserIdByLoginOrEmail(
-            userData.login
-         );
-         if (!user) {
-            return false;
-         }
+         // const user = await UserRepository.getUserIdByLoginOrEmail(
+         //    userData.login
+         // );
+         // if (!user) {
+         //    return false;
+         // }
          const userConfirmationData =
             await EmailConfirmationRepository.findEmailConfirmationDataByUserId(
-               user
+               newUser.id
             );
          if (!userConfirmationData) {
             return false;
@@ -70,7 +75,7 @@ export class AuthService {
       // приходит код, проверяю, что он есть в базе, не протух и isConfirmed это false, вношу подтверждение в isConfirmed
       try {
          const emailConfirmationData =
-            await EmailConfirmationRepository.findEmailConfirmationDataByConfirmCode(
+            await EmailConfirmationRepository.findConfirmationDataByConfirmCode(
                confirmationCode
             );
          if (!emailConfirmationData) {
@@ -209,6 +214,7 @@ export class AuthService {
       };
    }
 
+
    static async createSession(userSessionData: UserSessionData): Promise<
       ResultStatusType<{
          accessToken: string;
@@ -279,4 +285,61 @@ export class AuthService {
          status: ResultStatus.SUCCESS,
       };
    }
+
+   static async userPasswordRecovery(email: string): Promise<
+   ResultStatusType<boolean | null>
+> {
+      const token = uuidv4();
+      try {
+         const userId = await UserRepository.getUserIdByLoginOrEmail(email);
+         if (!userId) return {
+            data: null,
+            errorMessage: 'User not found',
+            status: ResultStatus.NOT_FOUND,
+         };
+         const confirmData = await EmailConfirmationService.createConfirmationData( userId, token );
+            
+         await EmailConfirmationService.sendPasswordRecoveryMail(token, email);
+         return {
+            data: null,
+            status: ResultStatus.SUCCESS,
+         };
+      } catch (error) {
+         console.log(error);
+         return {
+            data: null,
+            errorMessage: 'Server Error',
+            status: ResultStatus.SERVER_ERROR,
+         }
+      }
+
+   }
+
+   static async setNewUserPassword(recoveryCode: string, newPassword: string): Promise<
+   ResultStatusType<boolean | null>
+> {
+      try {
+         const confirmData = await EmailConfirmationRepository.findConfirmationDataByConfirmCode(recoveryCode);
+         if (!confirmData) return {
+            data: null, 
+            errorMessage: 'Confirmation code not found',
+            status: ResultStatus.NOT_FOUND
+         }
+         const userId = confirmData.userID;
+         const result = await UserService.setNewUserPassword(userId, newPassword);
+         return {
+            data: result,
+            status: ResultStatus.SUCCESS
+         }
+      } catch (error) {
+         console.log(error);
+         return {
+            data: null,
+            errorMessage: 'Server Error',
+            status: ResultStatus.SERVER_ERROR,
+         }
+      }
+   }
+
+   
 }

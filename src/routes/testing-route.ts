@@ -1,29 +1,30 @@
 import { Router, Request, Response } from 'express';
 
 import {
-   apiAccessLogsCollection,
-   blogsCollection,
-   commentsCollection,
-   emailConfirmDataCollection,
-   postsCollection,
-   refreshTokenBlackListCollection,
-   userSessionsCollection,
-   usersCollection,
+   ApiAccessLogsModelClass,
+   BlogModelClass,
+   CommentModelClass,
+   EmailConfirmDataModelClass,
+   PostModelClass,
+   RefreshTokenBlackListModelClass,
+   SessionModelClass,
+   UserModelClass,
 } from '../db/db';
 
 
 export const testRoute: Router = Router({});
 
 testRoute.delete('/', async (req, res) => {
-   await blogsCollection.deleteMany({});
-   await postsCollection.deleteMany({});
-   await commentsCollection.deleteMany({});
-   await usersCollection.deleteMany({});
-   await emailConfirmDataCollection.deleteMany({});
-   await refreshTokenBlackListCollection.deleteMany({});
-   await userSessionsCollection.deleteMany({});
-   await apiAccessLogsCollection.deleteMany({});
+   console.log('Start deleting all data');
+   await BlogModelClass.deleteMany({});
+   await PostModelClass.deleteMany({});
+   await CommentModelClass.deleteMany({});
+   await UserModelClass.deleteMany({});
+   await EmailConfirmDataModelClass.deleteMany({});
+   await RefreshTokenBlackListModelClass.deleteMany({});
+   await SessionModelClass.deleteMany({});
 
-
-   res.status(204).send('All data is deleted');
+   console.log('All data deleted');
+   res.sendStatus(204);
+   return
 });

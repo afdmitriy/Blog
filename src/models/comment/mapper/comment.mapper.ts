@@ -9,6 +9,6 @@ export const commentMapper = (
       id: comment._id.toString(),
       content: comment.content,
       commentatorInfo: comment.commentatorInfo,
-      createdAt: comment.createdAt,
+      createdAt: comment.createdAt.toISOString(),
    };
 };
